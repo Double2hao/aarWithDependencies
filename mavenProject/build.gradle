@@ -1,0 +1,74 @@
+plugins {
+  id 'com.android.library'
+  id 'maven'
+}
+
+android {
+  compileSdkVersion 30
+  buildToolsVersion "30.0.3"
+
+  defaultConfig {
+    minSdkVersion 24
+    targetSdkVersion 30
+    versionCode 1
+    versionName "1.0"
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    consumerProguardFiles "consumer-rules.pro"
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+
+dependencies {
+  compileOnly 'com.squareup.okhttp:okhttp:2.7.5'
+}
+
+def groupId = "com.test.xujiajia";
+def artifactId = "mavenproject"
+def version = "0.0.1"
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: uri('../repo'))
+
+      pom.groupId = groupId
+      pom.artifactId = artifactId
+      pom.version = version
+      pom.withXml {
+        //设置本项目的pom
+        def rootNode = asNode();
+        def projectNode = rootNode.children();
+        projectNode.each { item ->
+          def nodeToString = item.toString();
+          if (nodeToString.contains("groupId")) {
+            item.setValue(groupId)
+          } else if (nodeToString.contains("artifactId")) {
+            item.setValue(artifactId)
+          } else if (nodeToString.contains("version")) {
+            item.setValue(version)
+          }
+        }
+        //将项目中的compileOnly的依赖都导入pom
+        def depsNode = rootNode.appendNode('dependencies')
+        configurations.compileOnly.allDependencies.each { dep ->
+          def depNode = depsNode.appendNode('dependency')
+          depNode.appendNode('groupId', dep.group)
+          depNode.appendNode('artifactId', dep.name)
+          depNode.appendNode('version', dep.version)
+          depNode.appendNode('scope', 'compile')
+        }
+      }
+    }
+  }
+}

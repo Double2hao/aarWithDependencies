@@ -1,0 +1,3 @@
+include ':mavenProject'
+include ':app'
+rootProject.name = "aarWithDependencies"
